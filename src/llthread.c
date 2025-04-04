@@ -206,6 +206,8 @@ static llthread_child_t *llthread_child_new() {
 
   memset(this, 0, sizeof(llthread_child_t));
 
+  this->status = -1; /* not part of the status codes returned by the lua_pcall function */
+
   /* create new lua_State for the thread.             */
   /* open standard libraries.                         */
   this->L = luaL_newstate();
@@ -487,6 +489,9 @@ static int llthread_alive(llthread_t *this) {
 #else
   int rc = pthread_kill(this->thread, 0);
   if(rc == 0){ /* still alive */
+    if (this->child && this->child->status != -1) { /* the thread lua function has been called */
+      return JOIN_OK;
+    }
     return JOIN_ETIMEDOUT;
   }
 
